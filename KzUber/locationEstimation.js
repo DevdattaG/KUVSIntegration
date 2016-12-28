@@ -1,4 +1,5 @@
 var timer;
+var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
 
 $(document).ready(function(){
     var productName = window.location.search.split('?')[1];
@@ -61,7 +62,7 @@ function getEstimatesForUserLocation(latitude, longitude, destinationLatitude, d
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (result) {
-            var product = result.prices.filter(function(val){                
+            var product = result.d.prices.filter(function(val){                
                  return val.localized_display_name == name;
             });
             console.log(product);
