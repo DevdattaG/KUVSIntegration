@@ -1,15 +1,10 @@
-var uberClientId = "3ihOozZlsQwhat85XL3TH_MPaA5prGFu";
-var uberServerToken = "EkJlT8Nd5Q3HjYsSH-k3t7drGfY9yVWf8XbbkDq0";
-var uberClientSecret = "fUTn8GU5wdYuPPHOcUobNHEKuYfsFzVn1cDrXMuZ";
-
 var userLat;
 var userLong;
-var token;
+var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
+var siteBaseURL = "http://localhost:63685/KzUber/";
 
 $(document).ready(function(){
     var objLocation = JSON.parse(localStorage.getItem('.json/userDestination.json'));
-    var objToken = JSON.parse(localStorage.getItem('.json/userCredentials.json'));
-    token = objToken.token;
     var objProductData = JSON.parse(localStorage.getItem('.json/productDataInfo.json'));    
     if(localStorage.getItem('.json/userSource.json') !== null)
     {
@@ -19,7 +14,7 @@ $(document).ready(function(){
     }
     if(window.location.search.split("surge_confirmation_id=")[1] === undefined)
     {
-        getRequestEstimate(objProductData.productInfo.product_id, objToken.token, objLocation.destLat, objLocation.destLong);        
+        getRequestEstimate(objProductData.productInfo.product_id, objLocation.destLat, objLocation.destLong);        
     }else if(window.location.search.split("surge_confirmation_id=")[1] !== undefined)
     {
         console.log("Returned to page successfully after accepting higher surge rate ...");
@@ -27,50 +22,45 @@ $(document).ready(function(){
         $('#loading').addClass("hideBooking");
         $('#bookingPage').removeClass("hideBooking");
         $('#bookingPage').addClass("showBooking");
-        bookRideRequest(objProductData.productInfo.product_id, objToken.token, objLocation.destLat, objLocation.destLong, undefined, window.location.search.split("surge_confirmation_id=")[1]);
+        bookRideRequest(objProductData.productInfo.product_id, objLocation.destLat, objLocation.destLong, undefined, window.location.search.split("surge_confirmation_id=")[1]);
     }      
     $("#cancelRide").click(function(){
-        cancelRideRequest(token);
+        cancelRideRequest();
     });
-    $("#homeLink").click(function(){
-        window.location.replace("https://devdattag.github.io/UberIntegration.html");
+    $("#homeLink").click(function () {
+        window.location.replace(siteBaseURL + "UberIntegration.html");        
     });
 });
 
-function getRequestEstimate(productID, accessToken, destLat, destLong)
+function getRequestEstimate(productID, destLat, destLong)
 {
         console.log("Fetching request estimate...");
         var productId = productID;
-        var dataString = '{"product_id":"' + productId + '","start_latitude":"' + userLat + '","start_longitude":"' + userLong + '","end_latitude":"' + destLat + '","end_longitude":"' + destLong + '"}';
+        var dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "'}";        
             $.ajax({
-            url: "https://sandbox-api.uber.com/v1.2/requests/estimate",
-
-            type: "POST",
-            crossDomain: true,
-            headers: {
-                Authorization: "Bearer "+accessToken,
-                "Accept-Language": "en_US",
-                "Content-Type" : "application/json"
-            },
-            data: dataString,
+                url: siteURL + "getRequestEstimate",
+                type: "POST",
+                data: dataString,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
             success: function (result) {
                 // alert("Got the info");
-                console.log(JSON.stringify(result));
+                console.log(JSON.stringify(result.d));
                 $('#loading').removeClass("showBooking");
                 $('#loading').addClass("hideBooking");
                 $('#bookingPage').removeClass("hideBooking");
                 $('#bookingPage').addClass("showBooking");
-                if(result.hasOwnProperty("estimate"))
+                if (result.d.estimate !== null)
                 {
                     console.log("Upfront fares not enabled... Checking for surge multiplier rate...");
                     console.log(result);
-                    if(result.estimate.surge_confirmation_href === null)
+                    if(result.d.estimate.surge_confirmation_href === null)
                     {
-                        bookRideRequest(productId, accessToken, destLat, destLong);                          
+                        bookRideRequest(productId, destLat, destLong);                          
                     }else
                     {
                         console.log("Redirecting for surge confirmation");
-                        window.location.href = result.estimate.surge_confirmation_href;
+                        window.location.href = result.d.estimate.surge_confirmation_href;
                         console.log("Surge confirmed by user");
                     }
                     
@@ -90,14 +80,14 @@ function getRequestEstimate(productID, accessToken, destLat, destLong)
                 }else
                 {
                     $("#fareTypeEstimate").html("Upfront Fare Estimate")
-                    $(".modal-body #surgeMultiplierValue").html(result.fare.display);
+                    $(".modal-body #surgeMultiplierValue").html(result.d.fare.display);
                     $('#myModal')
                     .modal({ backdrop: 'static', keyboard: false })
                     .one('click', '[data-value]', function (e) {                        
                         if($(this).data('value')) {                                                    
-                            bookRideRequest(productId, accessToken, destLat, destLong, result.fare.fare_id);
-                        } else {                            
-                            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                            bookRideRequest(productId, destLat, destLong, result.d.fare.fare_id);
+                        } else {
+                            window.location.replace(siteBaseURL + "UberIntegration.html");                            
                         }
                     });
                     
@@ -105,16 +95,16 @@ function getRequestEstimate(productID, accessToken, destLat, destLong)
             },
             error: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");                
             },
             failure: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");                
             }
         });
 }
 
-function bookRideRequest(productID, accessToken, destLat, destLong, fareId, surgeConfirmationId)
+function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmationId)
 {
     console.log("Requesting Ride...");
     var dataString;

@@ -163,4 +163,49 @@ public partial class CommonWebMethods : System.Web.UI.Page
             return null;
         }
     }
+
+    [WebMethod]
+    public static RequestEstimateOutput getRequestEstimate(string productID, double latitude, double longitude, double destLat, double destLong)
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();
+        RequestEstimateOutput outputData = new RequestEstimateOutput();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1.2/requests/estimate";
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            //webRequest.Headers.Add("Accept-Language", "en_US");
+            //webRequest.Headers.Add("Content-Type", "application/json");
+            webRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(webRequest.GetRequestStream()))
+            {
+                string json = "{\"product_id\":\"" + productID + "\",\"start_latitude\":" + latitude + ",\"start_longitude\":" + longitude + ",\"end_latitude\":" + destLat + ",\"end_longitude\":"+destLong+"}";
+
+                streamWriter.Write(json);
+                streamWriter.Flush();
+            }
+
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<RequestEstimateOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
 }
