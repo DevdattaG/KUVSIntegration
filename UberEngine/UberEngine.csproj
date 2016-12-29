@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="AccessCredentials.cs" />
     <Compile Include="AuthenticationKeys.cs" />
+    <Compile Include="BookRideRequestOutput.cs" />
     <Compile Include="FareEstimateOutput.cs" />
     <Compile Include="NearbyRidesTimeOutput.cs" />
     <Compile Include="ProductInformationOutput.cs" />

@@ -208,4 +208,64 @@ public partial class CommonWebMethods : System.Web.UI.Page
             return null;
         }
     }
+
+    [WebMethod]
+    public static BookRideRequestOutput bookRideRequest(string productID, double latitude, double longitude, double destLat, double destLong, string fareId, string surgeConfirmationId)
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();
+        BookRideRequestOutput outputData = new BookRideRequestOutput();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/requests";
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            //webRequest.Headers.Add("Accept-Language", "en_US");
+            //webRequest.Headers.Add("Content-Type", "application/json");
+            webRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(webRequest.GetRequestStream()))
+            {
+                string json = "";
+                if (fareId == "NULL")
+                {
+                    if (surgeConfirmationId == "NULL")
+                    {
+                        json = "{\"product_id\":\"" + productID + "\",\"start_latitude\":" + latitude + ",\"start_longitude\":" + longitude + ",\"end_latitude\":" + destLat + ",\"end_longitude\":" + destLong + "}";
+                    }
+                    else
+                    {
+                        json = "{\"product_id\":\"" + productID + "\",\"surge_confirmation_id\":\"" + surgeConfirmationId + "\",\"start_latitude\":" + latitude + ",\"start_longitude\":" + longitude + ",\"end_latitude\":" + destLat + ",\"end_longitude\":" + destLong + "}";
+                    }
+                }
+                else
+                {
+                    json = "{\"product_id\":\"" + productID + "\",\"fare_id\":\"" + fareId + "\",\"start_latitude\":" + latitude + ",\"start_longitude\":" + longitude + ",\"end_latitude\":" + destLat + ",\"end_longitude\":" + destLong + "}";
+                }                
+
+                streamWriter.Write(json);
+                streamWriter.Flush();
+            }
+
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.Accepted) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<BookRideRequestOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
 }

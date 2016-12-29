@@ -108,46 +108,39 @@ function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmation
 {
     console.log("Requesting Ride...");
     var dataString;
+    var notApplicable = "NULL";    
     if(fareId === undefined)
     {
-        if(surgeConfirmationId === undefined)
-        {
-            dataString = '{"product_id":"' + productID + '","start_latitude":"' + userLat + '","start_longitude":"' + userLong + '","end_latitude":"' + destLat + '","end_longitude":"' + destLong + '"}';
-        }else
-        {
-            dataString = '{"product_id":"' + productID + '","surge_confirmation_id":"' + surgeConfirmationId + '","start_latitude":"' + userLat + '","start_longitude":"' + userLong + '","end_latitude":"' + destLat + '","end_longitude":"' + destLong + '"}';
+        if(surgeConfirmationId === undefined) {
+            dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "','fareId':'" + notApplicable + "','surgeConfirmationId':'" + notApplicable + "'}";                    
+        }else {
+            dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "','fareId':'" + notApplicable + "','surgeConfirmationId':'" + surgeConfirmationId + "'}";                                
         }
 
-    }else
-    {
-        dataString = '{"product_id":"' + productID + '","fare_id":"' + fareId + '","start_latitude":"' + userLat + '","start_longitude":"' + userLong + '","end_latitude":"' + destLat + '","end_longitude":"' + destLong + '"}';
+    }else {
+        dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "','fareId':'" + fareId + "','surgeConfirmationId':'" + notApplicable + "'}";                
     }
     
         $.ajax({
-        url: "https://sandbox-api.uber.com/v1/requests",
-        
-        type: "POST",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+accessToken,
-                "Accept-Language": "en_US",
-                "Content-Type" : "application/json"
-            },
-        data: dataString,
+            url: siteURL + "bookRideRequest",
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
         success: function (result) {
             console.log(JSON.stringify(result));
-            $("#showRideStatus").html(result.status);
-            console.log(result.status);        
-            setTimeout(function() { autoAcceptRequest(token, result.request_id); },7000);    
-            getRideRequestStatus(token, result.request_id);
+            $("#showRideStatus").html(result.d.status);
+            console.log(result.d.status);        
+            setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
+            getRideRequestStatus(result.d.request_id);
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");                            
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");                            
         }
     });
 }
