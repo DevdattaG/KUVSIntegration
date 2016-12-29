@@ -1,9 +1,6 @@
-var uberClientId = "3ihOozZlsQwhat85XL3TH_MPaA5prGFu";
-var uberServerToken = "EkJlT8Nd5Q3HjYsSH-k3t7drGfY9yVWf8XbbkDq0";
-var uberClientSecret = "fUTn8GU5wdYuPPHOcUobNHEKuYfsFzVn1cDrXMuZ";
-
 var userLat;
 var userLong;
+var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
 
 $(document).ready(function(){
     var objLocation = JSON.parse(localStorage.getItem('.json/userDestination.json'));
@@ -51,23 +48,13 @@ $(document).ready(function(){
 function getAuthToken(authCode, destLat, destLong)
 {
     console.log("Fetching Authentication Token...");
+    var dataString = "{'authCode':'" + authCode + "'}";
         $.ajax({
-        url: "https://login.uber.com/oauth/v2/token",
-        
-        type: "POST",
-        crossDomain: true,
-        headers: {
-            // Authorization: "Token " + uberServerToken
-            // Accept: "application/json",
-            // Content-Type : "application/x-www-form-urlencoded"
-        },
-        data: {
-            client_secret: uberClientSecret,
-            client_id: uberClientId,
-            grant_type: "authorization_code",
-            redirect_uri: "https://devdattag.github.io/booking.html",
-            code: authCode
-        },
+            url: siteURL + "getAuthToken",
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
         success: function (result) {
             console.log(JSON.stringify(result));
             var token = result.access_token;
@@ -88,18 +75,16 @@ function getAuthToken(authCode, destLat, destLong)
 
 function getProductInformation(productName, lat, long){
     console.log("Fetching product information...");
+    var dataString = "{'latitude':'" + lat + "','longitude':'" + long + "'}";
     var name = productName;
     $.ajax({
-        url: "https://api.uber.com/v1.2/products",
-        headers: {
-            Authorization: "Token " + uberServerToken
-        },
-        data: {
-            latitude: lat,
-            longitude: long
-        },
+        url: siteURL + "getProductInformation",
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
-            var productData = result.products.filter(function(val){
+            var productData = result.d.products.filter(function(val){
                 return val.display_name.toUpperCase() === productName.toUpperCase();
             });
             console.log(productData);

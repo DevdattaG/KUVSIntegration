@@ -98,33 +98,69 @@ public partial class CommonWebMethods : System.Web.UI.Page
         
     }
 
-    //[WebMethod]
-    //public static int getAuthToken(string authCode)
-    //{     
-    //    AuthenticationKeys auth = new AuthenticationKeys();
-    //    try
-    //    {      
-    //        string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=authorization_code&redirect_uri=https://devdattag.github.io/UberIntegration.html&code=" + authCode;
-    //        var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-    //        webRequest.Method = "POST";
-    //        var webResponse = (HttpWebResponse)webRequest.GetResponse();
-    //        if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
-    //        {
-    //            var reader = new StreamReader(webResponse.GetResponseStream());
-    //            string s = reader.ReadToEnd();
-    //            outputData = JsonConvert.DeserializeObject<FareEstimateOutput>(s);
-    //            return 1;
-    //        }
-    //        else
-    //        {
-    //            Console.WriteLine("Error");
-    //            return -1;
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Console.WriteLine(ex.Message);
-    //        return null;
-    //    }
-    //}
+    [WebMethod]
+    public static int getAuthToken(string authCode)
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();
+        AccessCredentials outputData = new AccessCredentials();
+        try
+        {
+            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=authorization_code&redirect_uri=http://localhost:63685/KzUber/booking.html&code=" + authCode;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            webRequest.Method = "POST";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<AccessCredentials>(s);
+                AuthenticationKeys.setAccessToken(outputData.access_token);
+                return 1;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return -1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return 0;
+        }
+    }
+
+
+    [WebMethod]
+    public static ProductInformationOutput getProductInformation(double latitude, double longitude)
+    {
+        ProductInformationOutput outputData = new ProductInformationOutput();
+        AuthenticationKeys auth = new AuthenticationKeys();
+        try
+        {
+            string uri = "https://api.uber.com/v1.2/products?latitude=" + latitude + "&longitude=" + longitude;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Token " + auth.uberServerToken;
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.Method = "GET";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<ProductInformationOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
 }

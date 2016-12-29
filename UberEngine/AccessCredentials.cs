@@ -8,7 +8,7 @@ namespace UberEngine
     public class AccessCredentials
     {
         public double last_authenticated { get; set; }
-        public static string access_token { get; set; }
+        public string access_token { get; set; }
         public double expires_in { get; set; }
         public string token_type { get; set; }
         public string scope { get; set; }

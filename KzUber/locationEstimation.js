@@ -1,34 +1,31 @@
 var timer;
 var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
 
-$(document).ready(function(){
+$(document).ready(function () {
     var productName = window.location.search.split('?')[1];
-    var carData = {"rideProduct": productName};
+    var carData = { "rideProduct": productName };
     localStorage.setItem('.json/rideName.json', JSON.stringify(carData));
 
-    $("#requestRide").click(function(){
-        if($("#destinationLatitude").val() === "" || $("#destinationLongitude").val() === "")
-        {
+    $("#requestRide").click(function () {
+        if ($("#destinationLatitude").val() === "" || $("#destinationLongitude").val() === "") {
             alert("Select Destination");
-        }else
-        {                   
-            var obj = {"destLat": +$("#destinationLatitude").val(), "destLong": +$("#destinationLongitude").val()};
+        } else {
+            var obj = { "destLat": +$("#destinationLatitude").val(), "destLong": +$("#destinationLongitude").val() };
             localStorage.setItem('.json/userDestination.json', JSON.stringify(obj));
+           // getUserLogin();
             window.location.href = "https://login.uber.com/oauth/v2/authorize?client_id=3ihOozZlsQwhat85XL3TH_MPaA5prGFu&response_type=code&scope=request+profile+request_receipt";
         }
     });
 
-    $("#fareEstimate").click(function(){
-        if($("#destinationLatitude").val() === "" || $("#destinationLongitude").val() === "")
-        {
+    $("#fareEstimate").click(function () {
+        if ($("#destinationLatitude").val() === "" || $("#destinationLongitude").val() === "") {
             alert("Select Destination");
-        }else
-        {           
+        } else {
             var destLat = +$("#destinationLatitude").val();
-            var destLong = +$("#destinationLongitude").val();     
-            getUserLocation(destLat,destLong,productName);        
+            var destLong = +$("#destinationLongitude").val();
+            getUserLocation(destLat, destLong, productName);
         }
-    });    
+    });
 });
 
 function getUserLocation(destLat,destLong,productName)
@@ -64,6 +61,33 @@ function getEstimatesForUserLocation(latitude, longitude, destinationLatitude, d
         success: function (result) {
             var product = result.d.prices.filter(function(val){                
                  return val.localized_display_name == name;
+            });
+            console.log(product);
+            $("#fareEstimatePanel").removeClass("hiddenEstimate");
+            $("#fareEstimatePanel").addClass("visibleEstimate");
+            $("#showFareEstimate").html(product[0].estimate);
+        },
+        error: function (response) {
+            alert("Sorry, Some techincal error occured");
+        },
+        failure: function (response) {
+            alert("Sorry, Some techincal error occured");
+        }
+    });
+}
+
+function getUserLogin() {
+
+    console.log("Redirecting for user login...");
+    $.ajax({
+        url: siteURL + "getUserLoginAuthentication",
+        type: "POST",
+//        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (result) {
+            var product = result.d.prices.filter(function (val) {
+                return val.localized_display_name == name;
             });
             console.log(product);
             $("#fareEstimatePanel").removeClass("hiddenEstimate");
