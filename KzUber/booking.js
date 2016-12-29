@@ -1,6 +1,7 @@
 var userLat;
 var userLong;
 var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
+var siteBaseURL = "http://localhost:63685/KzUber/";
 
 $(document).ready(function(){
     var objLocation = JSON.parse(localStorage.getItem('.json/userDestination.json'));
@@ -49,26 +50,28 @@ function getAuthToken(authCode, destLat, destLong)
 {
     console.log("Fetching Authentication Token...");
     var dataString = "{'authCode':'" + authCode + "'}";
-        $.ajax({
-            url: siteURL + "getAuthToken",
-            type: "POST",
-            data: dataString,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
+    $.ajax({
+        url: siteURL + "getAuthToken",
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
-            console.log(JSON.stringify(result));
-            var token = result.access_token;
-            var obj = {"token": token};
-            localStorage.setItem('.json/userCredentials.json', JSON.stringify(obj));
-            window.location.replace("https://devdattag.github.io/bookUber.html");
+            console.log(JSON.stringify(result.d));
+            if (result.d === 1) {
+                window.location.replace(siteBaseURL+"bookUber.html");
+            } else {
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+            }
+
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
