@@ -268,4 +268,101 @@ public partial class CommonWebMethods : System.Web.UI.Page
             return null;
         }
     }
+
+    [WebMethod]
+    public static RideRequestStatusOutput getRideRequestStatus(string requestID)
+    {
+        RideRequestStatusOutput outputData = new RideRequestStatusOutput();
+        AuthenticationKeys auth = new AuthenticationKeys();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/requests/"+requestID;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "GET";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<RideRequestStatusOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
+
+    [WebMethod]
+    public static int autoAcceptRequest(string requestID)
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();        
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/sandbox/requests/" + requestID;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "PUT";
+            using (var streamWriter = new StreamWriter(webRequest.GetRequestStream()))
+            {
+                string json = "{\"status\":\"accepted\"}";
+
+                streamWriter.Write(json);
+                streamWriter.Flush();
+            }
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            return 1;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return 0;
+        }
+    }
+
+    [WebMethod]
+    public static UserRideMapOutput getUserRideMap(string requestID)
+    {
+        UserRideMapOutput outputData = new UserRideMapOutput();
+        AuthenticationKeys auth = new AuthenticationKeys();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/map";
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "GET";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<UserRideMapOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
 }

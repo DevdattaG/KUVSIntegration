@@ -48,6 +48,8 @@
     <Compile Include="ProductInformationOutput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestEstimateOutput.cs" />
+    <Compile Include="RideRequestStatusOutput.cs" />
+    <Compile Include="UserRideMapOutput.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

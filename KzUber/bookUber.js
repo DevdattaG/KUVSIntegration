@@ -145,33 +145,28 @@ function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmation
     });
 }
 
-function getRideRequestStatus(token, requestID)
+function getRideRequestStatus(requestID)
 {
     console.log("Getting ride request status...");
-    var requestURL = "https://sandbox-api.uber.com/v1/requests/" + requestID;    
-
-
+    var requestURL = siteURL + "getRideRequestStatus";
+    var dataString = "{'requestID':'" + requestID + "'}";    
     var requestStatus = setInterval(function() {    
         $.ajax({
             url: requestURL,
-            
-            type: "GET",
-            crossDomain: true,
-            headers: {
-                    Authorization: "Bearer "+token,
-                    "Accept-Language": "en_US",
-                    "Content-Type" : "application/json"
-            },       
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
             success: function (result) {
-                console.log(result);
-                $("#showRideStatus").html(result.status);
-                if(result.status === "accepted")
+                console.log(result.d);
+                $("#showRideStatus").html(result.d.status);
+                if(result.d.status === "accepted")
                 {
-                    var obj = {"tripData": result};
+                    var obj = {"tripData": result.d};
                     localStorage.setItem('.json/tripData.json', JSON.stringify(obj));
                     clearInterval(requestStatus);
-                    getUserRideMap(result.request_id);
-                    showTripDetails(result);
+                    getUserRideMap(result.d.request_id);
+                    showTripDetails(result.d);
                 }
                 // $("#showRideStatus").html(result.status);
                 // console.log(result.status);
@@ -188,20 +183,18 @@ function getRideRequestStatus(token, requestID)
     }, 3000);
 }
 
-function autoAcceptRequest(token, requestID)
+function autoAcceptRequest(requestID)
 {
-    console.log("Accepting Request...");      
-    var dataString = '{"status":"accepted"}';
-    var requestURL = "https://sandbox-api.uber.com/v1/sandbox/requests/" + requestID;
+    console.log("Accepting Request...");
+    var dataString = "{'requestID':'" + requestID + "'}";      
+    //var dataString = '{"status":"accepted"}';
+    var requestURL = siteURL + "autoAcceptRequest";
         $.ajax({
-        url: requestURL,        
-        type: "PUT",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+token,
-                "Content-Type" : "application/json"
-        },      
-        data:dataString,
+        url: requestURL,
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
             console.log("Ride Accepted ...");          
         },
@@ -319,22 +312,18 @@ function showTripDetails(trip){
 
 function getUserRideMap(requestID)
 {
-    console.log("Getting User Map ...");       
-    // var dataString = '{"status":"accepted"}';
-    var requestURL = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/map";
+    console.log("Getting User Map ...");    
+    var dataString = "{'requestID':'" + requestID + "'}";    
         $.ajax({
-        url: requestURL,        
-        type: "GET",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+token,
-                "Content-Type" : "application/json"
-        },      
-        // data:dataString,
+            url: siteURL + "getUserRideMap",
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
         success: function (result) {
             console.log("User ride map received ..."); 
-            console.log(result);
-            showUserRideMap(result.href);
+            console.log(result.d);
+            showUserRideMap(result.d.href);
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
