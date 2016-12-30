@@ -74,10 +74,10 @@ function getTimeEstimatesForUserLocation(latitude, longitude) {
             }
         },
         error: function (response) {
-            alert("Sorry, Some techincal error occured");
+            //alert("Sorry, Some techincal error occured");
         },
         failure: function (response) {
-            alert("Sorry, Some techincal error occured");
+            //alert("Sorry, Some techincal error occured");
         }
     });
 }

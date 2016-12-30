@@ -62,21 +62,7 @@ function getRequestEstimate(productID, destLat, destLong)
                         console.log("Redirecting for surge confirmation");
                         window.location.href = result.d.estimate.surge_confirmation_href;
                         console.log("Surge confirmed by user");
-                    }
-                    
-                    
-                    // $(".modal-body #surgeMultiplierValue").html(result.estimate.surge_multiplier+"x");
-                    // $('#myModal')
-                    // .modal({ backdrop: 'static', keyboard: false })
-                    // .one('click', '[data-value]', function (e) {                        
-                    //     if($(this).data('value')) {
-                    //         // alert('confirmed');
-                    //         bookRideRequest(accessToken, destLat, destLong);
-                    //     } else {
-                    //         //alert('canceled');
-                    //         window.location.replace("https://devdattag.github.io/UberIntegration.html");
-                    //     }
-                    // });
+                    }                                       
                 }else
                 {
                     $("#fareTypeEstimate").html("Upfront Fare Estimate")
@@ -173,11 +159,11 @@ function getRideRequestStatus(requestID)
             },
             error: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             },
             failure: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             }
         });               
     }, 3000);
@@ -200,11 +186,11 @@ function autoAcceptRequest(requestID)
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
@@ -242,11 +228,11 @@ function getRideReceiptData(requestID, trip)
             },
             error: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             },
             failure: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace("https://devdattag.github.io/UberIntegration.html");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             }
         });               
     }, 3000);
@@ -273,11 +259,11 @@ function generateRideReceipt(requestID, tripInfo)
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
@@ -323,11 +309,11 @@ function getUserRideMap(requestID)
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
@@ -356,11 +342,11 @@ function autoUpdateRequestStatus(requestID, updateStatus)
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
@@ -411,7 +397,7 @@ function cancelRideRequest()
             dataType: "json",      
         success: function (result) {
             console.log("Ride cancelled successfully : "+result);
-            window.location.replace("https://devdattag.github.io/UberIntegration.html");
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");

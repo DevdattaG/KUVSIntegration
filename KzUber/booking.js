@@ -16,35 +16,8 @@ $(document).ready(function(){
     if(window.location.hash == "#_")
     {
         getAuthToken(window.location.search.split("code=")[1], objLocation.destLat, objLocation.destLong);
-    }  
-    // getLocation().then(function(response) {
-    //     userLat = response.latitude;
-    //     userLong = response.longitude;
-          
-    // });  
+    }        
 });
-
-// function getLocation() {
-
-//     return new Promise(function(resolve,reject) 
-//         {              
-
-//               if (!navigator.geolocation){
-//                 alert("Not Allowed");
-//                 return;
-//               }
-
-//               function success(position) {               
-//                 resolve(position.coords);
-//               }
-
-//               function error() {
-//                 alert("Error");
-//                   reject('error');
-//               }
-//               navigator.geolocation.getCurrentPosition(success, error);
-//         });
-// }
 
 function getAuthToken(authCode, destLat, destLong)
 {
