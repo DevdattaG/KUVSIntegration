@@ -462,4 +462,26 @@ public partial class CommonWebMethods : System.Web.UI.Page
             return null;
         }
     }
+
+    [WebMethod]
+    public static int cancelRideRequest(string requestID)
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID;
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "DELETE";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            return 1;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return 0;
+        }
+    }
 }

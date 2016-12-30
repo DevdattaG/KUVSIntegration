@@ -398,26 +398,20 @@ function showUserReceipt(receipt, trip)
         $("#showFareBreakdown").append("<div><p style='text-align:center; color:black; float:right;'><b id='receiptSubtotal'>"+receipt.total_charged+"</b></p><p style='color:black;'><b>Subtotal</b></p></div>");
 }
 
-function cancelRideRequest(token)
+function cancelRideRequest()
 {
-    console.log("Cancelling Ride...");    
+    console.log("Cancelling Ride...");
     var objRide = JSON.parse(localStorage.getItem('.json/tripData.json'));
-    var requestURL = "https://sandbox-api.uber.com/v1/requests/" + objRide.tripData.request_id;
+    var dataString = "{'requestID':'" + objRide.tripData.request_id + "'}";    
         $.ajax({
-        url: requestURL,
-        
-        type: "DELETE",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+token,
-                "Accept-Language": "en_US",
-                "Content-Type" : "application/json"
-        },        
+            url: siteURL + "cancelRideRequest",
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",      
         success: function (result) {
             console.log("Ride cancelled successfully : "+result);
             window.location.replace("https://devdattag.github.io/UberIntegration.html");
-            // $("#showRideStatus").html(result.status);
-            // console.log(result.status);
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
