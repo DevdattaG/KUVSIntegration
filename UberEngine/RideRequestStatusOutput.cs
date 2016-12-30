@@ -9,6 +9,7 @@ namespace UberEngine
     public class RideDestination
     {
         public double latitude { get; set; }
+        public int eta { get; set; }
         public double longitude { get; set; }
     }
 

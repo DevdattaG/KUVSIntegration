@@ -209,38 +209,35 @@ function autoAcceptRequest(requestID)
     });
 }
 
-function getRideReceiptData(token, requestID, trip)
+function getRideReceiptData(requestID, trip)
 {
     console.log("Getting trip status...");
-    var requestURL = "https://sandbox-api.uber.com/v1/requests/" + requestID;    
+    var requestURL = siteURL + "getRideReceiptData";
+    var dataString = "{'requestID':'" + requestID + "'}";    
     var requestId = requestID;
     var tripInfo = trip;
 
     var receiptStatus = setInterval(function() {    
         $.ajax({
             url: requestURL,
-            
-            type: "GET",
-            crossDomain: true,
-            headers: {
-                    Authorization: "Bearer "+token,
-                    "Accept-Language": "en_US",
-                    "Content-Type" : "application/json"
-            },       
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",   
             success: function (result) {
-                console.log(result);     
-                if(result.status === "arriving")
+                console.log(result.d);     
+                if(result.d.status === "arriving")
                 {
                     $("#showRideStatus").html("Your Uber is arriving now");
                 }
-                if(result.status === "in_progress")
+                if(result.d.status === "in_progress")
                 {
                     $("#showRideStatus").html("On Trip");                                        
                 }          
-                if(result.status === "completed")
+                if(result.d.status === "completed")
                 {                    
                     clearInterval(receiptStatus);                    
-                    generateRideReceipt(token,requestId, tripInfo);
+                    generateRideReceipt(requestId, tripInfo);
                 }
             },
             error: function (response) {
@@ -303,10 +300,10 @@ function showTripDetails(trip){
         $("#rideMake").text(trip.vehicle.make.toUpperCase());
         $("#rideName").text(trip.vehicle.model.toUpperCase());
         $("#rideNumber").text(trip.vehicle.license_plate.toUpperCase());  
-        setTimeout(function() { autoUpdateRequestStatus(token, trip.request_id, "arriving"); },10000);
-        setTimeout(function() { autoUpdateRequestStatus(token, trip.request_id, "in_progress"); },13000); 
-        setTimeout(function() { autoUpdateRequestStatus(token, trip.request_id, "completed"); },20000); 
-        getRideReceiptData(token, trip.request_id, trip);
+        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "arriving"); },10000);
+        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "in_progress"); },13000); 
+        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "completed"); },20000); 
+        getRideReceiptData(trip.request_id, trip);
     } 
 }
 
@@ -343,20 +340,18 @@ function showUserRideMap(mapLink)
     $("#showUberRideMap").attr("src", mapLink);
 }
 
-function autoUpdateRequestStatus(token, requestID, updateStatus)
+function autoUpdateRequestStatus(requestID, updateStatus)
 {
-    console.log("Changing Request Status to : "+ updateStatus +" ...");      
-    var dataString = '{"status":"'+updateStatus+'"}';
-    var requestURL = "https://sandbox-api.uber.com/v1/sandbox/requests/" + requestID;
+    console.log("Changing Request Status to : " + updateStatus + " ...");
+    var dataString = "{'requestID':'" + requestID + "','updateStatus':'" + updateStatus + "'}";    
+    //var dataString = '{"status":"'+updateStatus+'"}';
+    var requestURL = siteURL + "autoUpdateRequestStatus";
         $.ajax({
-        url: requestURL,        
-        type: "PUT",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+token,
-                "Content-Type" : "application/json"
-        },      
-        data:dataString,
+            url: requestURL,
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
         success: function (result) {
             console.log("Status changed to : "+ updateStatus);          
         },
