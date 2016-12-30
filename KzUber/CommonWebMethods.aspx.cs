@@ -87,16 +87,16 @@ public partial class CommonWebMethods : System.Web.UI.Page
         }
     }
 
-    [WebMethod]
-    public static void getUserLoginAuthentication()
-    {        
-        AuthenticationKeys auth = new AuthenticationKeys();
+    //[WebMethod]
+    //public static void getUserLoginAuthentication()
+    //{        
+    //    AuthenticationKeys auth = new AuthenticationKeys();
         
-            //string url = "https://login.uber.com/oauth/v2/authorize?client_id=" + auth.uberClientId + "&response_type=code&scope=request+profile";
-            //HttpContext.Current.Response.Redirect(url);            
-        HttpContext.Current.Response.Redirect("http://www.google.com", false); 
+    //        //string url = "https://login.uber.com/oauth/v2/authorize?client_id=" + auth.uberClientId + "&response_type=code&scope=request+profile";
+    //        //HttpContext.Current.Response.Redirect(url);            
+    //    HttpContext.Current.Response.Redirect("http://www.google.com", false); 
         
-    }
+    //}
 
     [WebMethod]
     public static int getAuthToken(string authCode)
