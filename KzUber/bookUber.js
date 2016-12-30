@@ -252,25 +252,24 @@ function getRideReceiptData(requestID, trip)
     }, 3000);
 }
 
-function generateRideReceipt(token, requestID, tripInfo)
+function generateRideReceipt(requestID, tripInfo)
 {
     console.log("Generating Ride Receipt...");  
-    var trip = tripInfo;       
-    var requestURL = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/receipt";
+    var trip = tripInfo;
+    var requestURL = siteURL + "generateRideReceipt";
+    var dataString = "{'requestID':'" + requestID + "'}"; 
         $.ajax({
-        url: requestURL,        
-        type: "GET",
-        crossDomain: true,
-        headers: {
-                Authorization: "Bearer "+token,
-                "Content-Type" : "application/json"
-        },              
+            url: requestURL,
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",             
         success: function (result) {
             console.log("Receipt Generated ...");
-            console.log(result);
-            var obj = {"receiptData": result};
+            console.log(result.d);
+            var obj = {"receiptData": result.d};
             localStorage.setItem('.json/receiptData.json', JSON.stringify(obj));
-            showUserReceipt(result, trip);
+            showUserReceipt(result.d, trip);
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");

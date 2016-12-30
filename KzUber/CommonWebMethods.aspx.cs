@@ -428,4 +428,38 @@ public partial class CommonWebMethods : System.Web.UI.Page
             return null;
         }
     }
+
+    [WebMethod]
+    public static RideReceiptOutput generateRideReceipt(string requestID)
+    {
+        RideReceiptOutput outputData = new RideReceiptOutput();
+        AuthenticationKeys auth = new AuthenticationKeys();
+        try
+        {
+            string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/receipt";
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            webRequest.Headers.Add("Authorization", authToken);
+            webRequest.ContentType = "application/json";
+            webRequest.Method = "GET";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<RideReceiptOutput>(s);
+                return outputData;
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
 }
