@@ -117,7 +117,7 @@ function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmation
             console.log(JSON.stringify(result));
             $("#showRideStatus").html(result.d.status);
             console.log(result.d.status);        
-            setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
+          //  setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
             getRideRequestStatus(result.d.request_id);
         },
         error: function (response) {
@@ -166,7 +166,7 @@ function getRideRequestStatus(requestID)
                 window.location.replace(siteBaseURL + "UberIntegration.html");
             }
         });               
-    }, 3000);
+    }, 7000);
 }
 
 function autoAcceptRequest(requestID)
@@ -235,7 +235,7 @@ function getRideReceiptData(requestID, trip)
                 window.location.replace(siteBaseURL + "UberIntegration.html");
             }
         });               
-    }, 3000);
+    }, 10000);
 }
 
 function generateRideReceipt(requestID, tripInfo)
@@ -285,9 +285,9 @@ function showTripDetails(trip){
         $("#rideMake").text(trip.vehicle.make.toUpperCase());
         $("#rideName").text(trip.vehicle.model.toUpperCase());
         $("#rideNumber").text(trip.vehicle.license_plate.toUpperCase());  
-        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "arriving"); },10000);
-        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "in_progress"); },13000); 
-        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "completed"); },20000); 
+//        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "arriving"); },10000);
+//        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "in_progress"); },13000); 
+//        setTimeout(function() { autoUpdateRequestStatus(trip.request_id, "completed"); },20000); 
         getRideReceiptData(trip.request_id, trip);
     } 
 }

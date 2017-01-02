@@ -51,7 +51,16 @@ public partial class CommonWebMethods : System.Web.UI.Page
                 AuthenticationKeys.setAccessToken(outputData.access_token);
                 AuthenticationKeys.setRefreshToken(outputData.refresh_token);
                 AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));
-                tokenTimer.Interval = AuthenticationKeys.getTokenExpiryTime() - 20000;
+                if (AuthenticationKeys.getTokenExpiryTime() != 0)
+                {
+                    tokenTimer.Interval = AuthenticationKeys.getTokenExpiryTime() - 20000;
+                }else{
+                    tokenTimer.Enabled = false;                    
+                    tokenTimer.Stop();
+                    tokenTimer.Dispose();
+                   // Cleanup();
+                }
+                
             }
             else
             {
@@ -161,6 +170,7 @@ public partial class CommonWebMethods : System.Web.UI.Page
                 AuthenticationKeys.setRefreshToken(outputData.refresh_token);
                 AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));                
                 Thread tokenThread = new Thread(new ThreadStart(CommonWebMethods.setTokenRefreshRoutine));
+                tokenThread.Start();
                 return 1;
             }
             else
