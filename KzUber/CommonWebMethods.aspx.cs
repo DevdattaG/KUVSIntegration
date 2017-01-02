@@ -13,12 +13,55 @@ using System.Net;
 using System.IO;
 using UberEngine;
 using Newtonsoft.Json;
+using System.Threading;
+using System.Timers;
 
 public partial class CommonWebMethods : System.Web.UI.Page
-{    
+{
+    public static System.Timers.Timer tokenTimer;
     protected void Page_Load(object sender, EventArgs e)
     {
        
+    }
+
+    public static void setTokenRefreshRoutine()
+    {
+        tokenTimer = new System.Timers.Timer(AuthenticationKeys.getTokenExpiryTime()-20000);
+        tokenTimer.Elapsed += new ElapsedEventHandler(getNewToken);
+        tokenTimer.AutoReset = true;
+        tokenTimer.Enabled = true;
+    }
+
+    private static void getNewToken(object source, ElapsedEventArgs e)
+    {
+
+        AuthenticationKeys auth = new AuthenticationKeys();
+        AccessCredentials outputData = new AccessCredentials();
+        try
+        {
+            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=refresh_token&redirect_uri=http://localhost:63685/KzUber/booking.html&refresh_token=" + AuthenticationKeys.getRefreshToken();
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            webRequest.Method = "POST";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                outputData = JsonConvert.DeserializeObject<AccessCredentials>(s);
+                AuthenticationKeys.setAccessToken(outputData.access_token);
+                AuthenticationKeys.setRefreshToken(outputData.refresh_token);
+                AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));
+                tokenTimer.Interval = AuthenticationKeys.getTokenExpiryTime() - 20000;
+            }
+            else
+            {
+                Console.WriteLine("Error");                
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);            
+        }                
     }
 
     [WebMethod]
@@ -115,6 +158,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
                 string s = reader.ReadToEnd();
                 outputData = JsonConvert.DeserializeObject<AccessCredentials>(s);
                 AuthenticationKeys.setAccessToken(outputData.access_token);
+                AuthenticationKeys.setRefreshToken(outputData.refresh_token);
+                AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));                
+                Thread tokenThread = new Thread(new ThreadStart(CommonWebMethods.setTokenRefreshRoutine));
                 return 1;
             }
             else

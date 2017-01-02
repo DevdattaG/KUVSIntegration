@@ -11,6 +11,8 @@ namespace UberEngine
         public string uberServerToken { get; set; }
         public string uberClientSecret { get; set; }
         public static string uberAccessToken { get; set; }
+        public static string uberRefreshToken { get; set; }
+        public static long uberTokenExpireTime { get; set; }
 
         public AuthenticationKeys()
         {
@@ -24,9 +26,29 @@ namespace UberEngine
             return uberAccessToken;
         }
 
+        public static string getRefreshToken()
+        {
+            return uberRefreshToken;
+        }
+
+        public static long getTokenExpiryTime()
+        {
+            return uberTokenExpireTime;
+        }
+
         public static void setAccessToken(string token)
         {
             uberAccessToken = token;
+        }
+
+        public static void setRefreshToken(string token)
+        {
+            uberRefreshToken = token;
+        }
+
+        public static void setTokenExpiryTime(long time)
+        {
+            uberTokenExpireTime = time;
         }
     }
 }
