@@ -32,6 +32,45 @@ $(document).ready(function(){
     });
 });
 
+
+function getRefreshToken() {
+    console.log("Getting refresh token...");    
+    var requestURL = siteURL + "getRefreshToken";
+    var timerLoop = JSON.parse(localStorage.getItem('.json/timer.json')).expiryTime;
+    var requestStatus = setInterval(function () {
+        var objTimer = JSON.parse(localStorage.getItem('.json/timer.json'));
+        if (objTimer.expiryTime != null) {
+            timerLoop = objTimer.expiryTime;
+            $.ajax({
+                url: requestURL,
+                type: "POST",
+                //                    data: dataString,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    console.log(result.d);
+                    if (result.d > 0) {
+                        var timerData = { "expiryTime": result.d };
+                        localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
+                    }
+                    // $("#showRideStatus").html(result.status);
+                    // console.log(result.status);
+                },
+                error: function (response) {
+                    alert("Sorry, Some techincal error occured");
+                    window.location.replace(siteBaseURL + "UberIntegration.html");
+                },
+                failure: function (response) {
+                    alert("Sorry, Some techincal error occured");
+                    window.location.replace(siteBaseURL + "UberIntegration.html");
+                }
+            });
+        } else {
+            clearInterval(requestStatus);
+        }
+    }, timerLoop);                  
+}
+
 function getRequestEstimate(productID, destLat, destLong)
 {
         console.log("Fetching request estimate...");
@@ -106,27 +145,28 @@ function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmation
     }else {
         dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "','fareId':'" + fareId + "','surgeConfirmationId':'" + notApplicable + "'}";                
     }
-    
-        $.ajax({
-            url: siteURL + "bookRideRequest",
-            type: "POST",
-            data: dataString,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
+
+    $.ajax({
+        url: siteURL + "bookRideRequest",
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
             console.log(JSON.stringify(result));
             $("#showRideStatus").html(result.d.status);
-            console.log(result.d.status);        
-          //  setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
+            console.log(result.d.status);
+            //  setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
+            getRefreshToken();
             getRideRequestStatus(result.d.request_id);
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace(siteBaseURL + "UberIntegration.html");                            
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         failure: function (response) {
             alert("Sorry, Some techincal error occured");
-            window.location.replace(siteBaseURL + "UberIntegration.html");                            
+            window.location.replace(siteBaseURL + "UberIntegration.html");
         }
     });
 }
@@ -381,7 +421,9 @@ function showUserReceipt(receipt, trip)
             $("#showFareBreakdown").append("<div><p style='text-align:center; color:#6e6e6e; float:right;'><b>"+val.amount+"</b></p><p style='color:#6e6e6e;'><b>"+val.name+"</b></p></div>");
         });
         $("#showFareBreakdown").append("<hr style='height:1px; border:none; color:#333; background-color:#333;' />");
-        $("#showFareBreakdown").append("<div><p style='text-align:center; color:black; float:right;'><b id='receiptSubtotal'>"+receipt.total_charged+"</b></p><p style='color:black;'><b>Subtotal</b></p></div>");
+        $("#showFareBreakdown").append("<div><p style='text-align:center; color:black; float:right;'><b id='receiptSubtotal'>" + receipt.total_charged + "</b></p><p style='color:black;'><b>Subtotal</b></p></div>");
+        var timerData = { "expiryTime": null };
+        localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
 }
 
 function cancelRideRequest()
@@ -396,7 +438,9 @@ function cancelRideRequest()
             contentType: "application/json; charset=utf-8",
             dataType: "json",      
         success: function (result) {
-            console.log("Ride cancelled successfully : "+result);
+            console.log("Ride cancelled successfully : " + result);
+            var timerData = { "expiryTime": null };
+            localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
             window.location.replace(siteBaseURL + "UberIntegration.html");
         },
         error: function (response) {

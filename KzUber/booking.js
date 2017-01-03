@@ -31,7 +31,9 @@ function getAuthToken(authCode, destLat, destLong)
         dataType: "json",
         success: function (result) {
             console.log(JSON.stringify(result.d));
-            if (result.d === 1) {
+            if (result.d > 0) {
+                var timerData = { "expiryTime": result.d };
+                localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
                 window.location.replace(siteBaseURL+"bookUber.html");
             } else {
                 window.location.replace(siteBaseURL + "UberIntegration.html");

@@ -24,60 +24,6 @@ public partial class CommonWebMethods : System.Web.UI.Page
        
     }
 
-    public static void setTokenRefreshRoutine()
-    {
-        AccessCredentials accessData = new AccessCredentials();
-        accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
-        tokenTimer = new System.Timers.Timer(accessData.getExpiryTime() - 20000);
-        tokenTimer.Elapsed += new ElapsedEventHandler(getNewToken);
-        tokenTimer.AutoReset = true;
-        tokenTimer.Enabled = true;
-    }
-
-    private static void getNewToken(object source, ElapsedEventArgs e)
-    {
-
-        AuthenticationKeys auth = new AuthenticationKeys();
-        MapAccessCredentials outputData = new MapAccessCredentials();
-        try
-        {
-            AccessCredentials accessData = new AccessCredentials();
-            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];            
-            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=refresh_token&redirect_uri=http://localhost:63685/KzUber/booking.html&refresh_token=" + accessData.getRefreshToken();
-            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            webRequest.Method = "POST";
-            var webResponse = (HttpWebResponse)webRequest.GetResponse();
-            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
-            {
-                var reader = new StreamReader(webResponse.GetResponseStream());
-                string s = reader.ReadToEnd();
-                outputData = JsonConvert.DeserializeObject<MapAccessCredentials>(s);
-                AccessCredentials accessKeysData = new AccessCredentials(outputData.last_authenticated, outputData.access_token, outputData.expires_in, outputData.token_type, outputData.scope, outputData.refresh_token);
-                //context.Session["userAuthData"] = accessData;
-                HttpContext.Current.Session["userAuthData"] = null;
-                HttpContext.Current.Session["userAuthData"] = accessKeysData;
-                if (accessKeysData.getExpiryTime() != 0)
-                {
-                    tokenTimer.Interval = accessKeysData.getExpiryTime() - 20000;
-                }else{
-                    tokenTimer.Enabled = false;                    
-                    tokenTimer.Stop();
-                    tokenTimer.Dispose();
-                   // Cleanup();
-                }
-                
-            }
-            else
-            {
-                Console.WriteLine("Error");                
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);            
-        }                
-    }
-
     [WebMethod]
     public static NearbyRidesTimeOutput getTimeEstimatesForUserLocation(double latitude, double longitude)
     {
@@ -156,7 +102,7 @@ public partial class CommonWebMethods : System.Web.UI.Page
     //}
 
     [WebMethod]
-    public static int getAuthToken(string authCode)
+    public static double getAuthToken(string authCode)
     {
         AuthenticationKeys auth = new AuthenticationKeys();
         MapAccessCredentials outputData = new MapAccessCredentials();        
@@ -173,10 +119,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
                 string s = reader.ReadToEnd();
                 outputData = JsonConvert.DeserializeObject<MapAccessCredentials>(s);
                 AccessCredentials accessData = new AccessCredentials(outputData.last_authenticated, outputData.access_token, outputData.expires_in, outputData.token_type, outputData.scope, outputData.refresh_token);                                
-                HttpContext.Current.Session["userAuthData"] = accessData;                                
-                Thread tokenThread = new Thread(new ThreadStart(CommonWebMethods.setTokenRefreshRoutine));
-            //    tokenThread.Start();
-                return 1;
+                HttpContext.Current.Session["userAuthData"] = accessData;                                                            
+                return accessData.getExpiryTime();
+                
             }
             else
             {
@@ -191,6 +136,41 @@ public partial class CommonWebMethods : System.Web.UI.Page
         }
     }
 
+    [WebMethod]
+    public static double getRefreshToken()
+    {
+        AuthenticationKeys auth = new AuthenticationKeys();
+        MapAccessCredentials outputData = new MapAccessCredentials();
+        try
+        {           
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=refresh_token&redirect_uri=http://localhost:63685/KzUber/booking.html&refresh_token=" + accessData.getRefreshToken();
+            var webRequest = (HttpWebRequest)WebRequest.Create(uri);
+            webRequest.Method = "POST";
+            var webResponse = (HttpWebResponse)webRequest.GetResponse();
+            if ((webResponse.StatusCode == HttpStatusCode.OK) && (webResponse.ContentLength > 0))
+            {
+                var reader = new StreamReader(webResponse.GetResponseStream());
+                string s = reader.ReadToEnd();
+                HttpContext.Current.Session["userAuthData"] = null;
+                outputData = JsonConvert.DeserializeObject<MapAccessCredentials>(s);
+                AccessCredentials accessKeysData = new AccessCredentials(outputData.last_authenticated, outputData.access_token, outputData.expires_in, outputData.token_type, outputData.scope, outputData.refresh_token);
+                HttpContext.Current.Session["userAuthData"] = accessKeysData;
+                return accessKeysData.getExpiryTime();
+            }
+            else
+            {
+                Console.WriteLine("Error");
+                return -1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return 0;
+        }
+    }
 
     [WebMethod]
     public static ProductInformationOutput getProductInformation(double latitude, double longitude)
