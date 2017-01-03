@@ -18,7 +18,7 @@ using System.Timers;
 
 public partial class CommonWebMethods : System.Web.UI.Page
 {
-    public static System.Timers.Timer tokenTimer;
+    public static System.Timers.Timer tokenTimer;    
     protected void Page_Load(object sender, EventArgs e)
     {
        
@@ -26,7 +26,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
 
     public static void setTokenRefreshRoutine()
     {
-        tokenTimer = new System.Timers.Timer(AuthenticationKeys.getTokenExpiryTime()-20000);
+        AccessCredentials accessData = new AccessCredentials();
+        accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+        tokenTimer = new System.Timers.Timer(accessData.getExpiryTime() - 20000);
         tokenTimer.Elapsed += new ElapsedEventHandler(getNewToken);
         tokenTimer.AutoReset = true;
         tokenTimer.Enabled = true;
@@ -36,10 +38,12 @@ public partial class CommonWebMethods : System.Web.UI.Page
     {
 
         AuthenticationKeys auth = new AuthenticationKeys();
-        AccessCredentials outputData = new AccessCredentials();
+        MapAccessCredentials outputData = new MapAccessCredentials();
         try
         {
-            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=refresh_token&redirect_uri=http://localhost:63685/KzUber/booking.html&refresh_token=" + AuthenticationKeys.getRefreshToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];            
+            string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=refresh_token&redirect_uri=http://localhost:63685/KzUber/booking.html&refresh_token=" + accessData.getRefreshToken();
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
             webRequest.Method = "POST";
             var webResponse = (HttpWebResponse)webRequest.GetResponse();
@@ -47,13 +51,14 @@ public partial class CommonWebMethods : System.Web.UI.Page
             {
                 var reader = new StreamReader(webResponse.GetResponseStream());
                 string s = reader.ReadToEnd();
-                outputData = JsonConvert.DeserializeObject<AccessCredentials>(s);
-                AuthenticationKeys.setAccessToken(outputData.access_token);
-                AuthenticationKeys.setRefreshToken(outputData.refresh_token);
-                AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));
-                if (AuthenticationKeys.getTokenExpiryTime() != 0)
+                outputData = JsonConvert.DeserializeObject<MapAccessCredentials>(s);
+                AccessCredentials accessKeysData = new AccessCredentials(outputData.last_authenticated, outputData.access_token, outputData.expires_in, outputData.token_type, outputData.scope, outputData.refresh_token);
+                //context.Session["userAuthData"] = accessData;
+                HttpContext.Current.Session["userAuthData"] = null;
+                HttpContext.Current.Session["userAuthData"] = accessKeysData;
+                if (accessKeysData.getExpiryTime() != 0)
                 {
-                    tokenTimer.Interval = AuthenticationKeys.getTokenExpiryTime() - 20000;
+                    tokenTimer.Interval = accessKeysData.getExpiryTime() - 20000;
                 }else{
                     tokenTimer.Enabled = false;                    
                     tokenTimer.Stop();
@@ -154,9 +159,10 @@ public partial class CommonWebMethods : System.Web.UI.Page
     public static int getAuthToken(string authCode)
     {
         AuthenticationKeys auth = new AuthenticationKeys();
-        AccessCredentials outputData = new AccessCredentials();
+        MapAccessCredentials outputData = new MapAccessCredentials();        
         try
         {
+            HttpContext.Current.Session["userAuthData"] = null;
             string uri = "https://login.uber.com/oauth/v2/token?client_secret=" + auth.uberClientSecret + "&client_id=" + auth.uberClientId + "&grant_type=authorization_code&redirect_uri=http://localhost:63685/KzUber/booking.html&code=" + authCode;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
             webRequest.Method = "POST";
@@ -165,12 +171,11 @@ public partial class CommonWebMethods : System.Web.UI.Page
             {
                 var reader = new StreamReader(webResponse.GetResponseStream());
                 string s = reader.ReadToEnd();
-                outputData = JsonConvert.DeserializeObject<AccessCredentials>(s);
-                AuthenticationKeys.setAccessToken(outputData.access_token);
-                AuthenticationKeys.setRefreshToken(outputData.refresh_token);
-                AuthenticationKeys.setTokenExpiryTime(Convert.ToInt64(outputData.expires_in));                
+                outputData = JsonConvert.DeserializeObject<MapAccessCredentials>(s);
+                AccessCredentials accessData = new AccessCredentials(outputData.last_authenticated, outputData.access_token, outputData.expires_in, outputData.token_type, outputData.scope, outputData.refresh_token);                                
+                HttpContext.Current.Session["userAuthData"] = accessData;                                
                 Thread tokenThread = new Thread(new ThreadStart(CommonWebMethods.setTokenRefreshRoutine));
-                tokenThread.Start();
+            //    tokenThread.Start();
                 return 1;
             }
             else
@@ -229,7 +234,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1.2/requests/estimate";
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             //webRequest.Headers.Add("Accept-Language", "en_US");
@@ -274,7 +281,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests";
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             //webRequest.Headers.Add("Accept-Language", "en_US");
@@ -334,7 +343,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests/"+requestID;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "GET";
@@ -367,7 +378,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/sandbox/requests/" + requestID;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "PUT";
@@ -397,7 +410,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/map";
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "GET";
@@ -430,7 +445,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/sandbox/requests/" + requestID;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "PUT";
@@ -460,7 +477,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "GET";
@@ -494,7 +513,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID + "/receipt";
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "GET";
@@ -527,7 +548,9 @@ public partial class CommonWebMethods : System.Web.UI.Page
         {
             string uri = "https://sandbox-api.uber.com/v1/requests/" + requestID;
             var webRequest = (HttpWebRequest)WebRequest.Create(uri);
-            string authToken = "Bearer " + AuthenticationKeys.getAccessToken();
+            AccessCredentials accessData = new AccessCredentials();
+            accessData = (AccessCredentials)HttpContext.Current.Session["userAuthData"];
+            string authToken = "Bearer " + accessData.getAccessToken();
             webRequest.Headers.Add("Authorization", authToken);
             webRequest.ContentType = "application/json";
             webRequest.Method = "DELETE";
