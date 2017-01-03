@@ -112,6 +112,8 @@ function getRequestEstimate(productID, destLat, destLong)
                         if($(this).data('value')) {                                                    
                             bookRideRequest(productId, destLat, destLong, result.d.fare.fare_id);
                         } else {
+                            var timerData = { "expiryTime": null };
+                            localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
                             window.location.replace(siteBaseURL + "UberIntegration.html");                            
                         }
                     });

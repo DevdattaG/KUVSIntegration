@@ -4,7 +4,9 @@ var timer;
 var siteURL = "http://localhost:63685/KzUber/CommonWebMethods.aspx/";
 
 $(document).ready(function(){
-    console.log("Page Loaded !!!");    
+    console.log("Page Loaded !!!");
+    var timerData = { "expiryTime": null };
+    localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
     getUserLocation();
 });
 
