@@ -75,58 +75,59 @@ function getRequestEstimate(productID, destLat, destLong)
 {
         console.log("Fetching request estimate...");
         var productId = productID;
-        var dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "'}";        
-            $.ajax({
-                url: siteURL + "getRequestEstimate",
-                type: "POST",
-                data: dataString,
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
+        var dataString = "{'productID':'" + productID + "','latitude':'" + userLat + "','longitude':'" + userLong + "','destLat':'" + destLat + "','destLong':'" + destLong + "'}";
+        $.ajax({
+            url: siteURL + "getRequestEstimate",
+            type: "POST",
+            data: dataString,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
             success: function (result) {
                 // alert("Got the info");
-                console.log(JSON.stringify(result.d));
-                $('#loading').removeClass("showBooking");
-                $('#loading').addClass("hideBooking");
-                $('#bookingPage').removeClass("hideBooking");
-                $('#bookingPage').addClass("showBooking");
-                if (result.d.estimate !== null)
-                {
-                    console.log("Upfront fares not enabled... Checking for surge multiplier rate...");
-                    console.log(result);
-                    if(result.d.estimate.surge_confirmation_href === null)
-                    {
-                        bookRideRequest(productId, destLat, destLong);                          
-                    }else
-                    {
-                        console.log("Redirecting for surge confirmation");
-                        window.location.href = result.d.estimate.surge_confirmation_href;
-                        console.log("Surge confirmed by user");
-                    }                                       
-                }else
-                {
-                    $("#fareTypeEstimate").html("Upfront Fare Estimate")
-                    $(".modal-body #surgeMultiplierValue").html(result.d.fare.display);
-                    $('#myModal')
+                if (result.d !== null) {
+                    console.log(JSON.stringify(result.d));
+                    $('#loading').removeClass("showBooking");
+                    $('#loading').addClass("hideBooking");
+                    $('#bookingPage').removeClass("hideBooking");
+                    $('#bookingPage').addClass("showBooking");
+                    if (result.d.estimate !== null) {
+                        console.log("Upfront fares not enabled... Checking for surge multiplier rate...");
+                        console.log(result);
+                        if (result.d.estimate.surge_confirmation_href === null) {
+                            bookRideRequest(productId, destLat, destLong);
+                        } else {
+                            console.log("Redirecting for surge confirmation");
+                            window.location.href = result.d.estimate.surge_confirmation_href;
+                            console.log("Surge confirmed by user");
+                        }
+                    } else {
+                        $("#fareTypeEstimate").html("Upfront Fare Estimate")
+                        $(".modal-body #surgeMultiplierValue").html(result.d.fare.display);
+                        $('#myModal')
                     .modal({ backdrop: 'static', keyboard: false })
-                    .one('click', '[data-value]', function (e) {                        
-                        if($(this).data('value')) {                                                    
+                    .one('click', '[data-value]', function (e) {
+                        if ($(this).data('value')) {
                             bookRideRequest(productId, destLat, destLong, result.d.fare.fare_id);
                         } else {
                             var timerData = { "expiryTime": null };
                             localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
-                            window.location.replace(siteBaseURL + "UberIntegration.html");                            
+                            window.location.replace(siteBaseURL + "UberIntegration.html");
                         }
                     });
-                    
-                }                
+
+                    }
+            } else {
+                alert("Sorry, Some techincal error occured");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+                }
             },
             error: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace(siteBaseURL + "UberIntegration.html");                
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             },
             failure: function (response) {
                 alert("Sorry, Some techincal error occured");
-                window.location.replace(siteBaseURL + "UberIntegration.html");                
+                window.location.replace(siteBaseURL + "UberIntegration.html");
             }
         });
 }
@@ -155,12 +156,17 @@ function bookRideRequest(productID, destLat, destLong, fareId, surgeConfirmation
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (result) {
-            console.log(JSON.stringify(result));
-            $("#showRideStatus").html(result.d.status);
-            console.log(result.d.status);
-            //  setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
-            getRefreshToken();
-            getRideRequestStatus(result.d.request_id);
+            if (result.d !== null) {
+                console.log(JSON.stringify(result));
+                $("#showRideStatus").html(result.d.status);
+                console.log(result.d.status);
+                //  setTimeout(function() { autoAcceptRequest(result.d.request_id); },7000);    
+                getRefreshToken();
+                getRideRequestStatus(result.d.request_id);
+            } else {
+                alert("Sorry, Some techincal error occured");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+            }            
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
@@ -177,8 +183,8 @@ function getRideRequestStatus(requestID)
 {
     console.log("Getting ride request status...");
     var requestURL = siteURL + "getRideRequestStatus";
-    var dataString = "{'requestID':'" + requestID + "'}";    
-    var requestStatus = setInterval(function() {    
+    var dataString = "{'requestID':'" + requestID + "'}";
+    var requestStatus = setInterval(function () {
         $.ajax({
             url: requestURL,
             type: "POST",
@@ -186,16 +192,21 @@ function getRideRequestStatus(requestID)
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function (result) {
-                console.log(result.d);
-                $("#showRideStatus").html(result.d.status);
-                if(result.d.status === "accepted")
-                {
-                    var obj = {"tripData": result.d};
-                    localStorage.setItem('.json/tripData.json', JSON.stringify(obj));
-                    clearInterval(requestStatus);
-                    getUserRideMap(result.d.request_id);
-                    showTripDetails(result.d);
+                if (result.d !== null) {
+                    console.log(result.d);
+                    $("#showRideStatus").html(result.d.status);
+                    if (result.d.status === "accepted") {
+                        var obj = { "tripData": result.d };
+                        localStorage.setItem('.json/tripData.json', JSON.stringify(obj));
+                        clearInterval(requestStatus);
+                        getUserRideMap(result.d.request_id);
+                        showTripDetails(result.d);
+                    }
+                } else {
+                    alert("Sorry, Some techincal error occured");
+                    window.location.replace(siteBaseURL + "UberIntegration.html");
                 }
+                
                 // $("#showRideStatus").html(result.status);
                 // console.log(result.status);
             },
@@ -207,7 +218,7 @@ function getRideRequestStatus(requestID)
                 alert("Sorry, Some techincal error occured");
                 window.location.replace(siteBaseURL + "UberIntegration.html");
             }
-        });               
+        });
     }, 7000);
 }
 
@@ -245,28 +256,31 @@ function getRideReceiptData(requestID, trip)
     var requestId = requestID;
     var tripInfo = trip;
 
-    var receiptStatus = setInterval(function() {    
+    var receiptStatus = setInterval(function () {
         $.ajax({
             url: requestURL,
             type: "POST",
             data: dataString,
             contentType: "application/json; charset=utf-8",
-            dataType: "json",   
+            dataType: "json",
             success: function (result) {
-                console.log(result.d);     
-                if(result.d.status === "arriving")
-                {
-                    $("#showRideStatus").html("Your Uber is arriving now");
+                if (result.d !== null) {
+                    console.log(result.d);
+                    if (result.d.status === "arriving") {
+                        $("#showRideStatus").html("Your Uber is arriving now");
+                    }
+                    if (result.d.status === "in_progress") {
+                        $("#showRideStatus").html("On Trip");
+                    }
+                    if (result.d.status === "completed") {
+                        clearInterval(receiptStatus);
+                        generateRideReceipt(requestId, tripInfo);
+                    }
+                } else {
+                    alert("Sorry, Some techincal error occured");
+                    window.location.replace(siteBaseURL + "UberIntegration.html");
                 }
-                if(result.d.status === "in_progress")
-                {
-                    $("#showRideStatus").html("On Trip");                                        
-                }          
-                if(result.d.status === "completed")
-                {                    
-                    clearInterval(receiptStatus);                    
-                    generateRideReceipt(requestId, tripInfo);
-                }
+                
             },
             error: function (response) {
                 alert("Sorry, Some techincal error occured");
@@ -276,7 +290,7 @@ function getRideReceiptData(requestID, trip)
                 alert("Sorry, Some techincal error occured");
                 window.location.replace(siteBaseURL + "UberIntegration.html");
             }
-        });               
+        });
     }, 10000);
 }
 
@@ -285,19 +299,25 @@ function generateRideReceipt(requestID, tripInfo)
     console.log("Generating Ride Receipt...");  
     var trip = tripInfo;
     var requestURL = siteURL + "generateRideReceipt";
-    var dataString = "{'requestID':'" + requestID + "'}"; 
-        $.ajax({
-            url: requestURL,
-            type: "POST",
-            data: dataString,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",             
+    var dataString = "{'requestID':'" + requestID + "'}";
+    $.ajax({
+        url: requestURL,
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
-            console.log("Receipt Generated ...");
-            console.log(result.d);
-            var obj = {"receiptData": result.d};
-            localStorage.setItem('.json/receiptData.json', JSON.stringify(obj));
-            showUserReceipt(result.d, trip);
+            if (result.d !== null) {
+                console.log("Receipt Generated ...");
+                console.log(result.d);
+                var obj = { "receiptData": result.d };
+                localStorage.setItem('.json/receiptData.json', JSON.stringify(obj));
+                showUserReceipt(result.d, trip);
+            } else {
+                alert("Sorry, Some techincal error occured");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+            }
+            
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
@@ -337,17 +357,22 @@ function showTripDetails(trip){
 function getUserRideMap(requestID)
 {
     console.log("Getting User Map ...");    
-    var dataString = "{'requestID':'" + requestID + "'}";    
-        $.ajax({
-            url: siteURL + "getUserRideMap",
-            type: "POST",
-            data: dataString,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
+    var dataString = "{'requestID':'" + requestID + "'}";
+    $.ajax({
+        url: siteURL + "getUserRideMap",
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
-            console.log("User ride map received ..."); 
-            console.log(result.d);
-            showUserRideMap(result.d.href);
+            if (result.d !== null) {
+                console.log("User ride map received ...");
+                console.log(result.d);
+                showUserRideMap(result.d.href);
+            } else {
+                alert("Sorry, Some techincal error occured");
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+            }            
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
@@ -432,18 +457,20 @@ function cancelRideRequest()
 {
     console.log("Cancelling Ride...");
     var objRide = JSON.parse(localStorage.getItem('.json/tripData.json'));
-    var dataString = "{'requestID':'" + objRide.tripData.request_id + "'}";    
-        $.ajax({
-            url: siteURL + "cancelRideRequest",
-            type: "POST",
-            data: dataString,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",      
+    var dataString = "{'requestID':'" + objRide.tripData.request_id + "'}";
+    $.ajax({
+        url: siteURL + "cancelRideRequest",
+        type: "POST",
+        data: dataString,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (result) {
-            console.log("Ride cancelled successfully : " + result);
-            var timerData = { "expiryTime": null };
-            localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
-            window.location.replace(siteBaseURL + "UberIntegration.html");
+            if (result.d > 0) {
+                console.log("Ride cancelled successfully : " + result);
+                var timerData = { "expiryTime": null };
+                localStorage.setItem('.json/timer.json', JSON.stringify(timerData));
+                window.location.replace(siteBaseURL + "UberIntegration.html");
+            }            
         },
         error: function (response) {
             alert("Sorry, Some techincal error occured");
